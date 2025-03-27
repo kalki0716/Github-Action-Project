@@ -23,26 +23,27 @@ jobs:
       run: mvn compile  
       
   security-checks:
-    runs-on: Self-hosted
-    needs: compile
+  runs-on: Self-hosted
+  needs: compile
 
-    steps:
-    - name: Git Checkout
-      uses: actions/checkout@v4
+  steps:
+  - name: Git Checkout
+    uses: actions/checkout@v4
 
-    - name: Install Trivy 
-      run: |
-        sudo apt-get install -y wget apt-transport-https gnupg lsb-release
-        wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-        echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
-        sudo apt-get update -y 
-        sudo apt-get install -y trivy
+  - name: Install Trivy 
+    run: |
+      sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+      wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+      echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+      for i in {1..10}; do sudo apt-get update -y && break || sleep 10; done
+      for i in {1..10}; do sudo apt-get install -y trivy && break || sleep 10; done
 
-    - name: Trivy FS Scan
-      run: trivy fs --format table -o fs-report.json .
+  - name: Trivy FS Scan
+    run: trivy fs --format table -o fs-report.json .
 
-    - name: Install gitleaks
-      run: sudo apt install -y gitleaks
+  - name: Install gitleaks
+    run: |
+      for i in {1..10}; do sudo apt-get install -y gitleaks && break || sleep 10; done
 
-    - name: Gitleaks code scan
-      run: gitleaks detect source . -r gitleaks-report.json -f json
+  - name: Gitleaks code scan
+    run: gitleaks detect source . -r gitleaks-report.json -f json
