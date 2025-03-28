@@ -40,14 +40,13 @@ jobs:
     - name: Trivy FS Scan
       run: |
         trivy fs --security-checks vuln,config --severity HIGH,CRITICAL --format json -o fs-report.json .
-        # Continue even if vulnerabilities found (you might want to fail the build instead)
         echo "Trivy scan completed"
 
     - name: Install gitleaks
       run: |
-        # Download and install latest gitleaks
-        VERSION=$(curl -s "https://api.github.com/repos/gitleaks/gitleaks/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
-        curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz | tar -xz -C /usr/local/bin/
+        # Download and install specific version of gitleaks (replace version as needed)
+        GITLEAKS_VERSION="8.18.1"
+        curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz | tar -xz -C /usr/local/bin gitleaks
         chmod +x /usr/local/bin/gitleaks
         gitleaks version
 
