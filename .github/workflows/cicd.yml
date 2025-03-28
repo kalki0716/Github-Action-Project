@@ -45,14 +45,16 @@ jobs:
 
     - name: Install gitleaks
       run: |
-        # Install latest gitleaks using official method instead of apt
-        curl -sSfL https://raw.githubusercontent.com/gitleaks/gitleaks/master/install.sh | sh
-        sudo mv ./bin/gitleaks /usr/local/bin/
+        # Download and install latest gitleaks
+        VERSION=$(curl -s "https://api.github.com/repos/gitleaks/gitleaks/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+        curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz | tar -xz -C /usr/local/bin/
+        chmod +x /usr/local/bin/gitleaks
+        gitleaks version
 
     - name: Gitleaks code scan
       run: |
         gitleaks detect --source . --report-path gitleaks-report.json --report-format json --verbose
-        # To fail the build if leaks are found:
+        # Uncomment to fail the build if leaks are found:
         # gitleaks detect --source . --report-path gitleaks-report.json --report-format json --exit-code 1
 
     - name: Upload Security Reports
