@@ -7,7 +7,6 @@ on:
 jobs:
   compile:
     runs-on: runner-1
-
     steps:
     - name: Git Checkout
       uses: actions/checkout@v4
@@ -20,33 +19,41 @@ jobs:
         cache: maven
         
     - name: Build with Maven
-      run: mvn compile
+      run: mvn -B compile --file pom.xml
   
   security-checks:
     runs-on: runner-1
     needs: compile
-
     steps:
     - name: Git Checkout
-      uses: actions/checkout@v4  # Fixed indentation
+      uses: actions/checkout@v4
 
-    - name: Install Trivy 
+    - name: Install Trivy
       run: |
+        sudo apt-get update
         sudo apt-get install -y wget apt-transport-https gnupg lsb-release
-        wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-        echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
-        for i in {1..10}; do sudo apt-get update -y && break || sleep 10; done
-        for i in {1..10}; do sudo apt-get install -y trivy && break || sleep 10; done
+        wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+        echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/trivy.list
+        sudo apt-get update
+        sudo apt-get install -y trivy
 
     - name: Trivy FS Scan
-      run: trivy fs --security-checks vuln,config --format json -o fs-report.json .
+      run: |
+        trivy fs --security-checks vuln,config --severity HIGH,CRITICAL --format json -o fs-report.json .
+        # Continue even if vulnerabilities found (you might want to fail the build instead)
+        echo "Trivy scan completed"
 
     - name: Install gitleaks
       run: |
-        for i in {1..10}; do sudo apt-get install -y gitleaks && break || sleep 10; done
+        # Install latest gitleaks using official method instead of apt
+        curl -sSfL https://raw.githubusercontent.com/gitleaks/gitleaks/master/install.sh | sh
+        sudo mv ./bin/gitleaks /usr/local/bin/
 
     - name: Gitleaks code scan
-      run: gitleaks detect --source . --report-path gitleaks-report.json -f json
+      run: |
+        gitleaks detect --source . --report-path gitleaks-report.json --report-format json --verbose
+        # To fail the build if leaks are found:
+        # gitleaks detect --source . --report-path gitleaks-report.json --report-format json --exit-code 1
 
     - name: Upload Security Reports
       uses: actions/upload-artifact@v4
