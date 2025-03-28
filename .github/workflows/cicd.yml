@@ -46,7 +46,7 @@ jobs:
         for i in {1..10}; do sudo apt-get install -y gitleaks && break || sleep 10; done
 
     - name: Gitleaks code scan
-      run: gitleaks detect --source . --report-path gitleaks-report.json --format json
+      run: gitleaks detect --source . --report-path gitleaks-report.json --report-format json
 
     - name: Upload Security Reports
       uses: actions/upload-artifact@v4
