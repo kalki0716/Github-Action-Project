@@ -64,9 +64,9 @@ jobs:
         path: |
           fs-report.json
 
-test:
+  test:
     runs-on: runner-1
-    needs: security-check
+    needs: security-checks
     steps:
     - uses: actions/checkout@v4
     - name: Set up JDK 17
@@ -79,6 +79,4 @@ test:
       run: mvn test
 
 
-          
-          gitleaks-report.json
-        retention-days: 1
+  
