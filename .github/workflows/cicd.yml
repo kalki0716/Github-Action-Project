@@ -44,12 +44,12 @@ jobs:
 
     - name: Install gitleaks
       run: |
-        # Download and install specific version of gitleaks (replace version as needed)
+        # Download and install gitleaks
         wget https://github.com/gitleaks/gitleaks/releases/download/v8.18.1/gitleaks_8.18.1_linux_x64.tar.gz
         tar -xzf gitleaks_8.18.1_linux_x64.tar.gz
+        chmod +x gitleaks  # Ensure executable permission
         sudo mv gitleaks /usr/local/bin/
-        gitleaks version
-        
+        gitleaks version  # Verify installation
 
     - name: Gitleaks code scan
       run: |
